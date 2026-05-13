@@ -1,6 +1,6 @@
 {
   "name": "@nexomailer/ai",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "AI-powered email features for NexoMailer (OpenAI/OpenRouter)",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

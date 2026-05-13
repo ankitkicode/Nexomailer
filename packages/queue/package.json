@@ -1,6 +1,6 @@
 {
   "name": "@nexomailer/queue",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "BullMQ-based email scheduling and queue management for NexoMailer",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

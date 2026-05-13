@@ -1,6 +1,6 @@
 {
   "name": "@nexomailer/core",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Core SDK entry and orchestrator for NexoMailer",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

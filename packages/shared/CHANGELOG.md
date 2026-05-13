@@ -1,5 +1,11 @@
 # @nexomailer/shared
 
+## 0.1.2
+
+### Patch Changes
+
+- add README files for better visibility on NPM.
+
 ## 0.1.1
 
 ### Patch Changes
