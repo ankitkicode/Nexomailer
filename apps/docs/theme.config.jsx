@@ -11,9 +11,9 @@ export default {
     </div>
   ),
   project: {
-    link: 'https://github.com/nexomailer/nexomailer'
+    link: 'https://github.com/ankitkicode/Nexomailer'
   },
-  docsRepositoryBase: 'https://github.com/nexomailer/nexomailer/tree/main/apps/docs',
+  docsRepositoryBase: 'https://github.com/ankitkicode/Nexomailer/tree/main/apps/docs',
   useNextSeoProps() {
     return {
       titleTemplate: '%s – NexoMailer'
