@@ -1,6 +1,14 @@
-# @nexomailer/tracking
+<div align="center">
+  <h1>@nexomailer/tracking</h1>
+  <p><b>Email tracking and webhook dispatch system for NexoMailer</b></p>
+  <p>
+    <a href="https://www.npmjs.com/package/@nexomailer/tracking">NPM</a> •
+    <a href="https://docs.nexomailer.com/tracking">Documentation</a> •
+    <a href="https://github.com/ankitkicode/Nexomailer">GitHub</a>
+  </p>
+</div>
 
-Email tracking and webhook dispatch system for NexoMailer
+---
 
 ## Installation
 
@@ -8,10 +16,8 @@ Email tracking and webhook dispatch system for NexoMailer
 pnpm add @nexomailer/tracking
 ```
 
-## Documentation
-
-For full documentation, visit [NexoMailer Docs](https://github.com/ankitkicode/Nexomailer).
+## Part of NexoMailer SDK
+This package is a core module of the **NexoMailer AI-powered email infrastructure**. For the full experience, including multi-provider failover and private analytics, see the [main documentation](https://docs.nexomailer.com/tracking).
 
 ## License
-
-MIT
+MIT © [Ankit Jatav](https://github.com/ankitkicode)

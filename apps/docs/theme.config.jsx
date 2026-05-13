@@ -16,7 +16,8 @@ export default {
   docsRepositoryBase: 'https://github.com/ankitkicode/Nexomailer/tree/main/apps/docs',
   useNextSeoProps() {
     return {
-      titleTemplate: '%s – NexoMailer'
+      titleTemplate: '%s – NexoMailer SDK',
+      description: 'Official documentation for NexoMailer - AI-powered email infrastructure SDK'
     }
   },
   head: (

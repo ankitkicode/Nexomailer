@@ -1,6 +1,14 @@
-# @nexomailer/templates
+<div align="center">
+  <h1>@nexomailer/templates</h1>
+  <p><b>Template engine for NexoMailer (Handlebars + MJML)</b></p>
+  <p>
+    <a href="https://www.npmjs.com/package/@nexomailer/templates">NPM</a> •
+    <a href="https://docs.nexomailer.com">Documentation</a> •
+    <a href="https://github.com/ankitkicode/Nexomailer">GitHub</a>
+  </p>
+</div>
 
-Template engine for NexoMailer (Handlebars + MJML)
+---
 
 ## Installation
 
@@ -8,10 +16,8 @@ Template engine for NexoMailer (Handlebars + MJML)
 pnpm add @nexomailer/templates
 ```
 
-## Documentation
-
-For full documentation, visit [NexoMailer Docs](https://github.com/ankitkicode/Nexomailer).
+## Part of NexoMailer SDK
+This package is a core module of the **NexoMailer AI-powered email infrastructure**. For the full experience, including multi-provider failover and private analytics, see the [main documentation](https://docs.nexomailer.com).
 
 ## License
-
-MIT
+MIT © [Ankit Jatav](https://github.com/ankitkicode)

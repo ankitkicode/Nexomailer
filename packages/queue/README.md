@@ -1,6 +1,14 @@
-# @nexomailer/queue
+<div align="center">
+  <h1>@nexomailer/queue</h1>
+  <p><b>BullMQ-based email scheduling and queue management for NexoMailer</b></p>
+  <p>
+    <a href="https://www.npmjs.com/package/@nexomailer/queue">NPM</a> •
+    <a href="https://docs.nexomailer.com">Documentation</a> •
+    <a href="https://github.com/ankitkicode/Nexomailer">GitHub</a>
+  </p>
+</div>
 
-BullMQ-based email scheduling and queue management for NexoMailer
+---
 
 ## Installation
 
@@ -8,10 +16,8 @@ BullMQ-based email scheduling and queue management for NexoMailer
 pnpm add @nexomailer/queue
 ```
 
-## Documentation
-
-For full documentation, visit [NexoMailer Docs](https://github.com/ankitkicode/Nexomailer).
+## Part of NexoMailer SDK
+This package is a core module of the **NexoMailer AI-powered email infrastructure**. For the full experience, including multi-provider failover and private analytics, see the [main documentation](https://docs.nexomailer.com).
 
 ## License
-
-MIT
+MIT © [Ankit Jatav](https://github.com/ankitkicode)

@@ -1,5 +1,19 @@
 # @nexomailer/core
 
+## 0.1.3
+
+### Patch Changes
+
+- enhance package READMEs with professional branding and direct links.
+- Updated dependencies
+  - @nexomailer/providers@0.1.3
+  - @nexomailer/shared@0.1.3
+  - @nexomailer/templates@0.1.3
+  - @nexomailer/ai@0.1.3
+  - @nexomailer/queue@0.1.3
+  - @nexomailer/analytics@0.1.3
+  - @nexomailer/tracking@0.1.3
+
 ## 0.1.2
 
 ### Patch Changes
