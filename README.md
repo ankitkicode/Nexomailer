@@ -39,8 +39,12 @@ pnpm dev --filter docs
 ## 🤝 Contributing
 We love contributions! Whether it's a bug fix, new feature, or documentation improvement, please check out our [Contributing Guide](./CONTRIBUTING.md) to get started.
 
+## ⚠️ Disclaimer
+NexoMailer is provided "as is", without warranty of any kind. The author (Ankit Jatav) is not responsible for any damage, data loss, or legal issues caused by the use of this software. By using this SDK, you agree to take full responsibility for your infrastructure and compliance.
+
 ## 📜 License
 NexoMailer is open-source software licensed under the [MIT License](./LICENSE).
+
 
 ---
 © 2026 Ankit Jatav - Premium SDK Solutions.

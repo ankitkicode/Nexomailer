@@ -1,6 +1,6 @@
 {
   "name": "@nexomailer/queue",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "BullMQ-based email scheduling and queue management for NexoMailer",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -31,5 +31,8 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/ankitkicode/Nexomailer.git"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

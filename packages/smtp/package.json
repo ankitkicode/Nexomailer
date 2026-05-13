@@ -1,6 +1,6 @@
 {
   "name": "@nexomailer/smtp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Native SMTP engine for NexoMailer",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -29,5 +29,8 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/ankitkicode/Nexomailer.git"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
