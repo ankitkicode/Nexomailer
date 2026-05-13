@@ -36,5 +36,12 @@ pnpm dev --filter docs
 2. **Build**: `pnpm build`
 3. **Test**: `pnpm test`
 
+## 🤝 Contributing
+We love contributions! Whether it's a bug fix, new feature, or documentation improvement, please check out our [Contributing Guide](./CONTRIBUTING.md) to get started.
+
+## 📜 License
+NexoMailer is open-source software licensed under the [MIT License](./LICENSE).
+
 ---
-© 2026 NexoMailer - Premium SDK Solutions.
+© 2026 Ankit Jatav - Premium SDK Solutions.
+
