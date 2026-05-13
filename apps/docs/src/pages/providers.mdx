@@ -1,0 +1,86 @@
+# Providers & Failover Engine
+
+NexoMailer is designed to be indestructible. By supporting multiple providers simultaneously, it ensures that your emails are delivered even if one service goes down.
+
+## Supported Providers
+
+| Type | Package | Key Config Fields |
+| :--- | :--- | :--- |
+| `smtp` | `@nexomailer/smtp` | `host`, `port`, `auth.user`, `auth.pass` |
+| `resend` | `@nexomailer/providers` | `apiKey` |
+| `ses` | `@nexomailer/providers` | `region`, `accessKeyId`, `secretAccessKey` |
+
+---
+
+## 1. Sequential Failover
+
+The `sequential` strategy (default) tries providers one by one based on their `priority` (1 is highest).
+
+```typescript
+const mailer = new NexoMailer({
+  providers: [
+    { type: 'resend', priority: 1, config: { apiKey: '...' } },
+    { type: 'smtp', priority: 2, config: { host: '...' } }
+  ]
+});
+```
+
+**How it works**: NexoMailer will try Resend first. If it returns a 4xx/5xx error or a timeout, the failover engine will immediately catch the error and retry using the SMTP provider.
+
+---
+
+## 2. Weighted Load Balancing
+
+If you have high volume, you can split traffic across providers to avoid rate limits.
+
+```typescript
+failover: { strategy: 'weighted' },
+providers: [
+  { type: 'ses', weight: 70, config: { ... } }, // 70% traffic
+  { type: 'resend', weight: 30, config: { ... } } // 30% traffic
+]
+```
+
+---
+
+## 3. Registering Custom Providers
+
+You can extend NexoMailer by adding your own provider engine.
+
+### Create the Provider Class
+```typescript
+import { EmailProvider } from '@nexomailer/providers';
+
+class PostmarkProvider extends EmailProvider {
+  async send(options) {
+    // Call Postmark API here
+    return { id: 'pm_123', status: 'sent' };
+  }
+}
+```
+
+### Register it with NexoMailer
+```typescript
+import { defaultRegistry } from '@nexomailer/providers';
+
+// Add it to the global registry before initializing NexoMailer
+defaultRegistry.register('postmark', PostmarkProvider);
+
+const mailer = new NexoMailer({
+  providers: [{ type: 'postmark', config: { apiKey: '...' } }]
+});
+```
+
+---
+
+## Health Checks
+
+NexoMailer keeps track of provider health. If a provider consistently fails, it is marked as "Inactive" for a cooldown period.
+
+> [!TIP]
+> **Check Provider Status**:
+> You can inspect the health of your infrastructure at runtime:
+> ```typescript
+> const health = await mailer.getHealth();
+> console.log(health.providers); // [{ type: 'ses', status: 'active' }, ...]
+> ```

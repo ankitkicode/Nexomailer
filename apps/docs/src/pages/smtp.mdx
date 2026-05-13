@@ -1,0 +1,92 @@
+# SMTP Provider
+
+The NexoMailer SMTP provider is a high-performance engine built directly on Node.js native sockets. It is designed for low-latency sending and maximum compatibility with all mail servers.
+
+## Core Features
+- **Auto-STARTTLS**: Automatically upgrades to secure connections if supported by the server.
+- **Connection Pooling**: Reuses existing connections to reduce handshake overhead.
+- **Multi-Auth Support**: Supports `LOGIN`, `PLAIN`, and `XOAUTH2` (OAuth2) authentication.
+- **Smart Timeouts**: Fine-grained control over connection and socket idle times.
+
+---
+
+## Basic Configuration
+
+```typescript
+{
+  type: 'smtp',
+  config: {
+    host: 'smtp.gmail.com',
+    port: 587,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS
+    }
+  }
+}
+```
+
+---
+
+## Advanced Enterprise Setup
+
+For high-volume production environments, you can fine-tune the low-level socket behavior:
+
+```typescript
+config: {
+  host: '...',
+  port: 587,
+  // Performance
+  pool: true,
+  maxConnections: 10,
+  connectionTimeout: 5000, // 5 seconds
+  socketTimeout: 10000,    // 10 seconds
+  
+  // Security & TLS
+  secure: false, // Set to true for Port 465
+  tls: {
+    rejectUnauthorized: true,
+    servername: 'smtp.yourdomain.com'
+  },
+  
+  // Custom Greeting
+  name: 'my-custom-app' // Used in EHLO command
+}
+```
+
+---
+
+## Authentication Methods
+
+### 1. Standard (Username/Password)
+Most common for services like Mailtrap, SendGrid, or Gmail App Passwords.
+
+### 2. OAuth2 (XOAUTH2)
+Highly recommended for modern Gmail/Google Workspace integration to avoid "Less Secure App" issues.
+
+```typescript
+auth: {
+  type: 'oauth2',
+  user: 'admin@yourcompany.com',
+  accessToken: 'ya29.A0AR...'
+}
+```
+
+---
+
+## Troubleshooting
+
+### Connection Timeouts
+If you are behind a firewall or using a slow SMTP relay, increase the `connectionTimeout` and `socketTimeout` values.
+
+### SSL/TLS Errors
+If you are using a self-signed certificate on a private SMTP server, you can temporarily disable strict TLS validation (only recommended for internal development):
+
+```typescript
+tls: {
+  rejectUnauthorized: false
+}
+```
+
+> [!TIP]
+> **Performance**: Always enable `pool: true` if you are sending more than 10 emails per minute. This avoids the overhead of creating a new TCP/TLS connection for every single message.

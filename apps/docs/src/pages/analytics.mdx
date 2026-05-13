@@ -1,0 +1,68 @@
+# Analytics & Reporting
+
+NexoMailer Analytics is a high-performance persistence layer that turns raw tracking events into actionable insights. It stores everything in your own MongoDB, giving you 100% data ownership.
+
+---
+
+## 🏗️ Unified Data Loop
+
+The Analytics module automatically aggregates events from two sources:
+1. **Engagement Events**: Opens and Clicks captured by your [Tracking Middleware](./tracking).
+2. **Infrastructure Events**: Bounces and Deliveries captured via [Provider Webhooks](./tracking).
+
+---
+
+## 1. Accessing Your Data
+
+Since NexoMailer is headless, we provide clean APIs to fetch your message history and statistics.
+
+### Fetch Message List
+```typescript
+const { messages, total } = await mailer.analytics.getMessages({
+  page: 1,
+  limit: 20,
+  status: 'BOUNCED' // Filter by any status
+});
+```
+
+### Get Full Message Audit Trail
+See every single interaction a user had with an email.
+```typescript
+const details = await mailer.analytics.getMessageDetails('msg_uuid_123');
+// Returns: { subject: '...', status: 'OPENED', events: [{ type: 'email.sent', ... }, { type: 'email.opened', ... }] }
+```
+
+---
+
+## 2. Global Aggregation (Reporting)
+
+Generate high-level summaries for your custom dashboards.
+
+```typescript
+const summary = await mailer.analytics.getSummary({
+  from: new Date('2026-05-01'),
+  to: new Date('2026-05-31'),
+  environment: 'production'
+});
+
+console.log(`Open Rate: ${summary.openRate}%`);
+console.log(`Total Bounces: ${summary.bounced}`);
+```
+
+---
+
+## 🛡️ Status Prioritization Logic
+
+To maintain a clean state, the Analytics module uses a "Priority Ladder". A message's status only moves **Up**.
+
+**Priority Ladder**:
+`SENT` < `DELIVERED` < `OPENED` < `CLICKED`
+
+> [!TIP]
+> **Example**: If a message is already marked as `CLICKED`, and a tracking pixel sends a late `OPENED` event, the status will **not** be downgraded. However, error states like `BOUNCED` or `COMPLAINED` will always trigger an immediate update regardless of current status.
+
+---
+
+## Build Your Own Dashboard
+
+NexoMailer is designed to be the engine *behind* your dashboard. You can use our provided [Schemas](./data-architecture) to build your own UI using React, Vue, or any other framework. All data is indexed by `messageId`, `projectId`, and `recipient` for sub-millisecond response times.

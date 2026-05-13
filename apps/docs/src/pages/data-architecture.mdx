@@ -1,0 +1,88 @@
+# Data Architecture
+
+NexoMailer is a **Headless SDK**, which means you have 100% control over your data. This page explains our MongoDB schema, indexing strategy, and how to query your data for custom integrations.
+
+---
+
+## 1. Primary Collections
+
+NexoMailer manages two main collections in your MongoDB database.
+
+### `messages` Collection
+This is the "Source of Truth" for every email sent. It stores the final state and aggregate metrics.
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `messageId` | `String` | **Unique Nexo ID (UUID)**. Used for all tracking links. |
+| `recipient` | `String` | The target email address. Indexed for fast lookup. |
+| `status` | `Enum` | Current state: `SENT`, `DELIVERED`, `OPENED`, `CLICKED`, `BOUNCED`, `FAILED`, `COMPLAINED`. |
+| `provider` | `String` | The provider used (e.g., `smtp`, `resend`, `ses`). |
+| `subject` | `String` | Email subject line. |
+| `openCount` | `Number` | Total successful open events. |
+| `clickCount` | `Number` | Total successful click events. |
+| `projectId` | `String` | Multi-tenant identifier for your different apps. |
+| `environment`| `String` | Environment tag: `production`, `staging`, `development`. |
+| `metadata` | `Object` | Custom payload including provider-specific IDs. |
+
+### `trackingevents` Collection
+This is a time-series audit trail of every interaction. Every click or open creates a new document here.
+
+```json
+{
+  "messageId": "msg_998877",
+  "type": "email.opened",
+  "ip": "122.161.x.x",
+  "userAgent": "Mozilla/5.0...",
+  "timestamp": "2026-05-13T09:00:00Z"
+}
+```
+
+---
+
+## 2. Performance & Indexing
+
+To ensure NexoMailer handles millions of emails without slowing down, the following indexes are automatically created:
+
+- **Unique Nexo ID**: `db.messages.createIndex({ messageId: 1 }, { unique: true })`
+- **Recipient Search**: `db.messages.createIndex({ recipient: 1 })`
+- **Multi-Tenant Filter**: `db.messages.createIndex({ projectId: 1, environment: 1 })`
+- **Event Timeline**: `db.trackingevents.createIndex({ messageId: 1, timestamp: -1 })`
+
+---
+
+## 3. Status Lifecycle
+
+The `status` field in the `messages` collection follows a strict [Priority Ladder](./analytics#priority-ladder). Events from [Tracking Middleware](./tracking) and [Webhooks](./tracking#infrastructure-webhooks) are aggregated to move the status forward.
+
+> [!TIP]
+> **Data Integrity**: NexoMailer ensures that once an email is marked as `CLICKED`, it can never be downgraded to `OPENED`, even if multiple tracking pixels are triggered.
+
+---
+
+## 4. Querying Examples
+
+You can build your own custom queries on top of the NexoMailer schema:
+
+### Find all bounced emails for a project
+```javascript
+db.messages.find({ 
+  projectId: 'my-saas-app', 
+  status: 'BOUNCED' 
+});
+```
+
+### Get most active recipients
+```javascript
+db.messages.aggregate([
+  { $group: { _id: "$recipient", totalOpens: { $sum: "$openCount" } } },
+  { $sort: { totalOpens: -1 } }
+]);
+```
+
+---
+
+## Related Documentation
+
+- [Analytics API](./analytics): How to fetch this data programmatically.
+- [Tracking Setup](./tracking): How this data is captured.
+- [Global Configuration](./global-setup): How to configure your MongoDB URI.

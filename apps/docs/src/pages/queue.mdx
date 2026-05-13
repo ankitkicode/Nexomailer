@@ -1,0 +1,91 @@
+# Queue & Scheduling
+
+For high-volume applications, sending emails synchronously can slow down your app. NexoMailer's Queue module uses **BullMQ + Redis** to handle background processing, automatic retries, and rate limiting.
+
+---
+
+## 1. Setup & Configuration
+
+To use the queue, you need a running **Redis** instance.
+
+```typescript
+const mailer = new NexoMailer({
+  /* ... providers ... */
+  queue: {
+    redis: {
+      host: 'localhost',
+      port: 6379
+    },
+    concurrency: 5, // Process 5 emails at a time
+    limiter: {
+      max: 10,       // Max 10 emails
+      duration: 1000 // Every 1 second (Rate limiting)
+    }
+  }
+});
+```
+
+---
+
+## 2. Scheduling Emails
+
+### Immediate Background Send
+Use `queue.schedule()` to offload the sending process to the background worker.
+
+```typescript
+const { jobId } = await mailer.queue.schedule({
+  to: 'user@example.com',
+  subject: 'Background Task',
+  html: '...'
+});
+```
+
+### Future Scheduling
+You can schedule an email to be sent at a specific time in the future.
+
+```typescript
+await mailer.queue.schedule({
+  to: 'client@example.com',
+  subject: 'Your Weekly Report',
+  html: '...',
+  scheduledAt: new Date('2026-05-20T10:00:00Z')
+});
+```
+
+---
+
+## 3. Bulk Operations
+
+If you need to send a large campaign, use `scheduleBatch` for better performance.
+
+```typescript
+const emails = [
+  { options: { to: 'user1@email.com', subject: 'Hello' } },
+  { options: { to: 'user2@email.com', subject: 'Hi' } }
+];
+
+await mailer.queue.scheduleBatch(emails);
+```
+
+---
+
+## 4. Queue Management
+
+NexoMailer gives you full control over the lifecycle of your background jobs.
+
+| Method | Description |
+| :--- | :--- |
+| `mailer.queue.pause()` | Stop processing new jobs (existing ones finish). |
+| `mailer.queue.resume()` | Start processing jobs again. |
+| `mailer.queue.getStats()` | Get counts of `waiting`, `failed`, `completed` jobs. |
+| `mailer.queue.cancel(jobId)` | Remove a specific email from the queue before it sends. |
+
+---
+
+## Reliability Features
+
+> [!TIP]
+> **Automatic Retries**: By default, if a provider fails, NexoMailer will retry the job up to 3 times with an exponential backoff strategy (e.g., waiting 1s, then 2s, then 4s).
+
+> [!IMPORTANT]
+> **Persistence**: Since the queue is backed by Redis, even if your Node.js server crashes, the pending emails stay safe in the queue and will be processed once the server restarts.

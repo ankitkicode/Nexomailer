@@ -1,0 +1,33 @@
+{
+  "name": "@nexomailer/shared",
+  "version": "0.1.0",
+  "description": "Shared types, utilities, and constants for NexoMailer",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "@types/node": "^22.0.0",
+    "vitest": "^3.1.0"
+  },
+  "author": "Ankit Jatav",
+  "license": "MIT",
+  "homepage": "https://github.com/nexomailer/nexomailer",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nexomailer/nexomailer.git"
+  }
+}

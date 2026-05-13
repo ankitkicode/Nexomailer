@@ -1,0 +1,39 @@
+{
+  "name": "@nexomailer/core",
+  "version": "0.1.0",
+  "description": "Core SDK entry and orchestrator for NexoMailer",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@nexomailer/ai": "workspace:*",
+    "@nexomailer/providers": "workspace:*",
+    "@nexomailer/queue": "workspace:*",
+    "@nexomailer/shared": "workspace:*",
+    "@nexomailer/templates": "workspace:*",
+    "@nexomailer/tracking": "workspace:*",
+    "@nexomailer/analytics": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.2.4"
+  },
+  "author": "Ankit Jatav",
+  "license": "MIT",
+  "homepage": "https://github.com/nexomailer/nexomailer",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nexomailer/nexomailer.git"
+  }
+}

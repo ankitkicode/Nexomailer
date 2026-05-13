@@ -1,0 +1,36 @@
+{
+  "name": "@nexomailer/templates",
+  "version": "0.1.0",
+  "description": "Template engine for NexoMailer (Handlebars + MJML)",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@nexomailer/shared": "workspace:*",
+    "handlebars": "^4.7.9",
+    "mjml": "^4.18.0"
+  },
+  "devDependencies": {
+    "@types/mjml": "^4.7.4",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.1.0"
+  },
+  "author": "Ankit Jatav",
+  "license": "MIT",
+  "homepage": "https://github.com/nexomailer/nexomailer",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nexomailer/nexomailer.git"
+  }
+}

@@ -1,0 +1,122 @@
+# Global Configuration
+
+This page provides a complete reference for the `NexoMailer` constructor options. Every field listed here is natively supported by the SDK.
+
+---
+
+## Complete Configuration Example
+
+Here is a full-featured setup including all optional modules.
+
+```typescript
+import { NexoMailer } from '@nexomailer/core';
+
+const mailer = new NexoMailer({
+  // 1. Providers (At least one required)
+  providers: [
+    { 
+      type: 'resend', 
+      priority: 1, 
+      config: { apiKey: process.env.RESEND_API_KEY } 
+    },
+    { 
+      type: 'smtp', 
+      priority: 2, 
+      config: { 
+        host: 'smtp.gmail.com', 
+        port: 587, 
+        auth: { user: '...', pass: '...' } 
+      } 
+    }
+  ],
+
+  // 2. Analytics (Persistence)
+  analytics: {
+    mongodbUri: process.env.MONGODB_URI,
+    projectId: 'my-saas-app',
+    environment: 'production',
+    retentionDays: 90
+  },
+
+  // 3. Tracking (Engagement)
+  tracking: {
+    enabled: true,
+    baseUrl: 'https://api.myapp.com/api',
+    opens: true,
+    clicks: true
+  },
+
+  // 4. AI Personalization (Optional)
+  ai: {
+    provider: 'openai',
+    apiKey: process.env.OPENAI_API_KEY,
+    model: 'gpt-4o',
+    temperature: 0.7
+  },
+
+  // 5. Queue & Scheduling (Optional)
+  queue: {
+    redis: { host: 'localhost', port: 6379 },
+    concurrency: 5
+  },
+
+  // 6. Branding & Style
+  branding: {
+    companyName: 'NexoDev',
+    tone: 'Professional',
+    websiteUrl: 'https://nexodev.com'
+  }
+});
+```
+
+---
+
+## Field Reference
+
+### 1. `providers` (Array)
+A list of email service providers. NexoMailer will use these for sending and failover.
+- `type`: `'smtp' | 'resend' | 'ses'`.
+- `priority`: Number (lower is tried first).
+- `weight`: (For `weighted` strategy) Percentage of traffic.
+- `config`: Provider-specific credentials.
+
+### 2. `analytics` (Object)
+Handles data persistence.
+- `mongodbUri`: Your MongoDB connection string.
+- `projectId`: Used to filter data in multi-tenant apps.
+- `environment`: Defaults to `'development'`.
+
+### 3. `tracking` (Object)
+Configuration for link rewriting and pixels.
+- `enabled`: Global toggle.
+- `baseUrl`: The root URL where your [Tracking Middleware](./tracking) is mounted.
+- `opens/clicks`: Toggle individual tracking types.
+
+### 4. `ai` (Object)
+LLM integration settings.
+- `provider`: `'openai' | 'openrouter'`.
+- `model`: Model name (e.g., `gpt-4o`, `anthropic/claude-3`).
+- `maxTokens`: Token limit for responses.
+
+### 5. `queue` (Object)
+Redis-backed background processing.
+- `redis`: Object containing `host`, `port`, `password`.
+- `concurrency`: Number of simultaneous emails to process.
+
+### 6. `failover` (Object)
+- `strategy`: `'sequential'` (Priority-based) or `'weighted'` (Load-balanced).
+- `maxRetries`: Number of attempts per provider.
+
+---
+
+## Initialization
+
+Always initialize the SDK before using it to ensure all plugins and database connections are ready.
+
+```typescript
+await mailer.init();
+console.log('NexoMailer is ready to send!');
+```
+
+> [!TIP]
+> **Environment Variables**: Never hardcode your API keys. Always use `process.env` or a secret manager.

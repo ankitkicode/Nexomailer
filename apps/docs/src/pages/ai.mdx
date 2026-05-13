@@ -1,0 +1,147 @@
+# AI Intelligence Engine
+
+NexoMailer integrates with state-of-the-art LLMs (OpenAI, OpenRouter, Anthropic) to transform your email infrastructure from a delivery tool into an intelligent marketing assistant.
+
+## Features at a Glance
+- **Personalizer**: Rewrite templates for specific recipients.
+- **Spam Analyst**: Predict and fix spam triggers before sending.
+- **Subject Optimizer**: A/B test subject lines with AI-predicted scores.
+- **Brand Consistency**: Automatically maintains your company's tone and style.
+
+---
+
+## 1. Advanced Configuration
+
+NexoMailer supports any provider via **OpenRouter**, allowing you to use models like Claude 3.5 or Llama 3.
+
+```typescript
+const mailer = new NexoMailer({
+  ai: {
+    provider: 'openrouter', // or 'openai'
+    apiKey: process.env.AI_API_KEY,
+    model: 'anthropic/claude-3.5-sonnet', // Choose any model
+    temperature: 0.7,
+    maxTokens: 2000
+  },
+  branding: {
+    companyName: 'NexoDev',
+    tone: 'Professional but creative' // AI will follow this!
+  }
+});
+```
+
+---
+
+## 2. Specialized AI Tools
+
+### Subject Optimizer
+Generate high-converting subject lines with predicted scores.
+
+```typescript
+const result = await mailer.ai.optimizeSubject({
+  subject: 'Check out our new features',
+  audience: 'SaaS Founders',
+  variations: 3
+});
+
+// Returns: [{ subject: '...', score: 95, reasoning: '...' }, ...]
+```
+
+### Spam Shield
+Analyze your email content for spam filters before you hit send.
+
+```typescript
+const analysis = await mailer.ai.spamCheck({
+  subject: 'WIN FREE MONEY NOW!!!',
+  html: '<h1>Limited time offer click here</h1>'
+});
+
+console.log(analysis.verdict); // "likely_spam"
+console.log(analysis.improvements); // ["Remove all-caps", "Avoid urgency triggers"]
+```
+
+---
+
+## 3. 1-on-1 Personalization
+
+Inject dynamic, relevant content into your MJML templates based on recipient data.
+
+```typescript
+const personalized = await mailer.ai.personalize({
+  template: 'welcome',
+  recipient: {
+    name: 'Ankit',
+    industry: 'DevOps',
+    recentActivity: 'Starred our repo'
+  },
+  style: 'Casual and welcoming'
+});
+
+// Use it directly in mailer.send()
+await mailer.send({
+  to: 'ankit@example.com',
+  subject: personalized.subject,
+  html: personalized.html
+});
+```
+
+---
+
+## 🚀 Real-World Use Cases
+
+### 1. Re-activating Dormant Users
+Instead of a generic "We miss you" email, use AI to reference their last activity and offer a personalized incentive.
+
+```typescript
+const result = await mailer.ai.generate({
+  prompt: 'Write a re-engagement email for a user who hasn\'t logged in for 30 days.',
+  context: {
+    lastProject: 'Mobile App Design',
+    daysInactive: 30
+  },
+  tone: 'warm'
+});
+```
+
+### 2. Multi-Language Outreach
+Scale your business globally by automatically localizing your emails while keeping the core message intact.
+
+```typescript
+const localized = await mailer.ai.personalize({
+  html: welcomeMjml,
+  recipient: { country: 'Japan', language: 'Japanese' },
+  style: 'Polite and formal'
+});
+```
+
+### 3. Smart Newsletter Summaries
+If you send long-form content, use AI to generate a "TL;DR" (Too Long; Didn't Read) section at the top of your email to increase engagement.
+
+```typescript
+const summary = await mailer.ai.generate({
+  prompt: `Summarize this article into 3 bullet points: ${articleText}`,
+  length: 'short'
+});
+```
+
+### 4. Dynamic Product Pitches
+Change how you describe a feature based on whether the recipient is a Developer, a Marketer, or a CEO.
+
+```typescript
+const pitch = await mailer.ai.personalize({
+  html: featureAnnouncementHtml,
+  recipient: { role: 'CEO' },
+  style: 'Focus on ROI and business growth'
+});
+```
+
+---
+
+## Performance & Token Management
+
+> [!TIP]
+> **Cost Optimization**: AI operations are expensive. We recommend using `personalize` only for high-value leads or `spamCheck` once during template design.
+
+> [!IMPORTANT]
+> **Error Handling**: NexoMailer includes built-in `AIRateLimitError`. Always catch this to handle provider downtime or token limits gracefully.
+

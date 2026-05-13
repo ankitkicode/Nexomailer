@@ -1,0 +1,25 @@
+{
+  "index": "Introduction",
+  "architecture": "Architecture Overview",
+  "global-setup": "Setup & Configuration",
+  "contact": {
+    "type": "separator",
+    "title": "Core Infrastructure"
+  },
+  "smtp": "Native SMTP Engine",
+  "providers": "Providers & Failover",
+  "tracking": "Tracking & Webhooks",
+  "analytics": "Private Analytics",
+  "features": {
+    "type": "separator",
+    "title": "Intelligent Features"
+  },
+  "templates": "Templates Engine",
+  "ai": "AI Personalization",
+  "queue": "Queue & Scheduling",
+  "reference": {
+    "type": "separator",
+    "title": "Reference"
+  },
+  "data-architecture": "Data Schema Reference"
+}

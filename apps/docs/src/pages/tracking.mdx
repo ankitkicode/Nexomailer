@@ -1,0 +1,78 @@
+# Email Tracking & Webhooks
+
+NexoMailer provides a dual-layer tracking system: **Direct Tracking** (for engagement) and **Provider Webhooks** (for infrastructure events).
+
+---
+
+## 1. Engagement Tracking (Opens & Clicks)
+
+When you mount the middleware, NexoMailer handles engagement tracking automatically via its internal endpoints.
+
+```typescript
+// Mount this in your main Express/Fastify app
+app.use('/api', mailer.tracking.middleware());
+```
+
+**Endpoints provided**:
+- `GET /api/track/open/:messageId`: Tracks email opens via a 1x1 pixel.
+- `GET /api/track/click/:messageId?url=...`: Tracks link clicks and redirects the user.
+
+---
+
+## 2. Infrastructure Webhooks (Bounces & Deliveries)
+
+To track events that happen outside of the email body (like a hard bounce or a spam complaint), you must configure Webhooks in your provider's dashboard.
+
+### Built-in Support: Resend
+Configure your Resend dashboard to send events to:
+`https://your-api.com/api/track/webhook/resend`
+
+### Custom Webhook Parsers
+If you use a provider not natively supported, you can register a custom parser:
+
+```typescript
+mailer.tracking.registerParser('postmark', (payload) => {
+  // Map Postmark payload to NexoMailer format
+  return {
+    messageId: payload.Metadata.nexo_id,
+    eventType: payload.RecordType === 'Bounce' ? 'email.bounced' : 'email.delivered',
+    metadata: { original: payload }
+  };
+});
+```
+
+Now, point Postmark to: `https://your-api.com/api/track/webhook/postmark`.
+
+---
+
+## 3. Outgoing Webhooks (Notifications)
+
+Instruct NexoMailer to notify **your other services** whenever an event occurs.
+
+```typescript
+tracking: {
+  enabled: true,
+  webhooks: [
+    {
+      url: 'https://your-crm.com/webhooks/nexomailer',
+      secret: 'your_webhook_secret',
+      events: ['email.opened', 'email.clicked', 'email.bounced']
+    }
+  ]
+}
+```
+
+> [!IMPORTANT]
+> **Signature Verification**: NexoMailer signs every outgoing webhook with an `X-NexoMailer-Signature`. Use our [Webhook SDK](./analytics) to verify these payloads in your backend.
+
+---
+
+## 🔍 Real-time Event Monitoring
+
+You can subscribe to events programmatically in your code:
+
+```typescript
+mailer.on('email.opened', (event) => {
+  console.log(`User ${event.recipient} opened the email!`);
+});
+```

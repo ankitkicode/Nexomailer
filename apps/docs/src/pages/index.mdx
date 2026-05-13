@@ -1,0 +1,73 @@
+
+
+# NexoMailer SDK
+
+ **AI-powered email infrastructure SDK**
+
+NexoMailer is a professional Node.js framework for developers who need more than just a simple mailer. It combines multi-provider failover, AI-driven personalization, and private analytics into a single, cohesive SDK.
+
+---
+
+## ⚡ Quick Start
+
+### 1. Installation
+```bash
+pnpm add @nexomailer/core @nexomailer/providers @nexomailer/analytics
+```
+
+### 2. Basic Configuration
+```typescript
+import { NexoMailer } from '@nexomailer/core';
+
+const mailer = new NexoMailer({
+  providers: [{
+    type: 'smtp',
+    priority: 1,
+    config: { host: 'smtp.gmail.com', port: 587, auth: { ... } }
+  }],
+  analytics: {
+    mongodbUri: process.env.MONGODB_URI
+  }
+});
+```
+
+---
+
+## 📦 Package Ecosystem
+
+To keep the SDK lightweight, NexoMailer is split into specialized packages. You only install what you need.
+
+| Package | Role | Why use it? |
+| :--- | :--- | :--- |
+| **`@nexomailer/core`** | The Brain | Orchestrates failover, plugins, and module access. |
+| **`@nexomailer/providers`** | The Connectors | Native drivers for Resend, AWS SES, and SMTP. |
+| **`@nexomailer/analytics`** | The Memory | Handles MongoDB persistence and reporting. |
+| **`@nexomailer/ai`** | The Intelligence | Direct integration with LLMs for personalization. |
+| **`@nexomailer/templates`** | The Designer | Responsive MJML engine with Handlebars support. |
+
+---
+
+## 🔍 Under the Hood: The Nexo ID
+
+When you call `mailer.send()`, NexoMailer does something unique:
+1. It generates a **Unique UUID** (The Nexo ID) *before* sending.
+2. It uses this ID for all tracking pixels and link rewrites.
+3. It returns this ID to you.
+
+**Result**: Even if you use 3 different providers for one campaign, you can track everything via a **single, consistent ID** in your database.
+
+---
+
+## 🛠️ Best Practices
+
+> [!IMPORTANT]
+> **Environment Isolation**: Always use the `environment` tag in your analytics config (`staging` vs `production`) to keep your test data separate from real user metrics.
+
+---
+
+## Ready to Dive In?
+
+- [Setup SMTP Providers](./smtp)
+- [Configure Multi-Provider Failover](./providers)
+- [Implement Live Tracking](./tracking)
+- [Understand Data Architecture](./data-architecture)

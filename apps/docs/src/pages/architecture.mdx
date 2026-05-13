@@ -1,0 +1,58 @@
+# Architecture Overview
+
+NexoMailer is a **Headless SDK** designed for deep integration into your existing Node.js ecosystem. It removes the need for a third-party dashboard, giving you complete control over your data and infrastructure.
+
+## High-Level Architecture
+
+NexoMailer follows a modular design where each package handles a specific part of the email lifecycle.
+
+```mermaid
+graph TD
+    A[Your App] --> B[@nexomailer/core]
+    B --> C[@nexomailer/templates]
+    B --> D[@nexomailer/ai]
+    B --> E[@nexomailer/providers]
+    E --> F[SMTP / Resend / SES]
+    
+    F --> G[Recipient Inbox]
+    G --> H[Tracking Middleware]
+    H --> I[@nexomailer/analytics]
+    I --> J[(Your MongoDB)]
+    
+    J -.-> K[Your Custom Admin Panel]
+```
+
+---
+
+## The Core Components
+
+### 1. The Headless Engine (`core`)
+The brain of the system. It manages configuration, initializes plugins, and orchestrates the failover between different email providers.
+
+### 2. Persistence Layer (`analytics`)
+Unlike traditional mailers, NexoMailer has a built-in memory. It connects directly to your MongoDB to store message history, status, and tracking events. You own the database; we just provide the schema and logic.
+
+### 3. Instrumentation & Tracking (`tracking`)
+This module rewrites your email HTML to include tracking pixels and redirected links. It includes a mountable Express middleware that captures events and sends them to the Analytics layer.
+
+---
+
+## The Data Flow (Email Lifecycle)
+
+1. **Generation**: Your app calls `mailer.send()`.
+2. **Augmentation**: The `templates` and `ai` modules generate the responsive HTML.
+3. **Instrumentation**: The `tracking` module injects a unique Nexo ID into the links.
+4. **Dispatch**: The `providers` module sends the email via the primary or backup service.
+5. **Collection**: When a user opens the email, your backend (via our middleware) captures the event.
+6. **Sync**: The status in your MongoDB is automatically updated from `SENT` to `OPENED`.
+
+---
+
+## Why Headless?
+
+- **Zero Vendor Lock-in**: You can switch email providers in seconds.
+- **Privacy by Design**: Your recipient list and email content never leave your infrastructure.
+- **Customization**: Build the exact dashboard your team needs using our [Analytics API](./analytics).
+
+> [!TIP]
+> Since NexoMailer is headless, you can integrate it into any existing Node.js backend (Express, NestJS, Fastify, etc.) with just a few lines of code.

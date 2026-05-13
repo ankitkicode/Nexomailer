@@ -1,0 +1,97 @@
+# Template Management (MJML & Handlebars)
+
+NexoMailer provides a unified engine to manage your email layouts. It handles the heavy lifting of compiling MJML, injecting data via Handlebars, and caching results for high-performance delivery.
+
+---
+
+## 1. Professional Workflow
+
+### Global Branding
+Avoid repeating your company logo or social links in every template. Set them once globally:
+
+```typescript
+mailer.templates.setGlobalData({
+  logo: 'https://cdn.yoursite.com/logo.png',
+  companyName: 'NexoDev Inc.',
+  website: 'https://nexodev.com'
+});
+```
+
+### Loading from Directory
+For production, keep your templates organized in a folder structure. Each folder should contain a `template.mjml` (or `.hbs`) and an optional `meta.json`.
+
+```typescript
+// Loads all subfolders as templates automatically
+await mailer.templates.loadDirectory('./src/emails');
+```
+
+---
+
+## 2. Built-in Template Gallery
+
+NexoMailer comes with a library of minimalist, professional templates that work out of the box.
+
+### `otp` (One-Time Password)
+Ideal for 2FA, password resets, or registration verification.
+- **Required Data**: `code`, `expiresIn`
+- **Example**:
+```typescript
+template: { name: 'otp', data: { code: '448822', expiresIn: 10 } }
+```
+
+### `welcome` (Welcome Email)
+A clean, friendly outreach for new signups.
+- **Required Data**: `name`, `companyName`, `actionUrl`
+- **Example**:
+```typescript
+template: { 
+  name: 'welcome', 
+  data: { name: 'Ankit', companyName: 'NexoDev', actionUrl: '...' } 
+}
+```
+
+### `reset-password`
+A focused, urgent template for security actions.
+- **Required Data**: `name`, `resetUrl`
+- **Example**:
+```typescript
+template: { name: 'reset-password', data: { name: 'Ankit', resetUrl: '...' } }
+```
+
+---
+
+## 3. Advanced Customization
+
+### Conditional Logic
+Since NexoMailer uses Handlebars, you can add dynamic logic inside your MJML without breaking the layout.
+
+```html
+<mj-section>
+  <mj-column>
+    {{#if isPremium}}
+      <mj-text>Thank you for being a Pro member!</mj-text>
+    {{else}}
+      <mj-button href="/upgrade">Upgrade Now</mj-button>
+    {{/if}}
+  </mj-column>
+</mj-section>
+```
+
+### Custom Helpers
+You can register your own Handlebars helpers to process data before rendering:
+
+```typescript
+import Handlebars from 'handlebars';
+
+Handlebars.registerHelper('uppercase', (str) => str.toUpperCase());
+```
+
+---
+
+## Performance & Validation
+
+> [!TIP]
+> **Pre-compilation**: Every template is compiled and cached in memory during registration. This ensures sub-millisecond rendering times even under high load.
+
+> [!WARNING]
+> **MJML Tags**: NexoMailer supports all standard MJML tags. However, avoid using illegal CSS attributes (like `margin-top` on `mj-section`) to ensure maximum cross-client compatibility.
