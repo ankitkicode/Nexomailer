@@ -3,7 +3,7 @@
   <h1>NexoMailer</h1>
   <p><b>AI-powered email infrastructure SDK for Node.js</b></p>
   <p>
-    <a href="https://docs.nexomailer.com">Documentation</a> •
+    <a href="https://nexomailer-docs.vercel.app">Documentation</a> •
     <a href="https://www.npmjs.com/org/nexomailer">NPM Registry</a> •
     <a href="https://github.com/ankitkicode/Nexomailer/issues">Report Bug</a>
   </p>
@@ -51,7 +51,7 @@ await mailer.send({
 ```
 
 ## 📖 Documentation
-Visit [docs.nexomailer.com](https://docs.nexomailer.com) for full API reference, integration guides, and advanced configuration.
+Visit [https://nexomailer-docs.vercel.app](https://nexomailer-docs.vercel.app) for full API reference, integration guides, and advanced configuration.
 
 ## 🤝 Contributing
 Contributions are welcome! See our [Contributing Guide](./CONTRIBUTING.md).
