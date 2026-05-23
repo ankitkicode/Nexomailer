@@ -2,6 +2,18 @@
 
 The NexoMailer SMTP provider is a high-performance engine built directly on Node.js native sockets. It is designed for low-latency sending and maximum compatibility with all mail servers.
 
+## Installation
+
+Install the SMTP module via npm:
+
+```bash
+npm install @nexomailer/smtp
+```
+
+*(Alternatively, you can use `pnpm add @nexomailer/smtp` or `yarn add @nexomailer/smtp`).*
+
+---
+
 ## Core Features
 - **Auto-STARTTLS**: Automatically upgrades to secure connections if supported by the server.
 - **Connection Pooling**: Reuses existing connections to reduce handshake overhead.
@@ -12,45 +24,62 @@ The NexoMailer SMTP provider is a high-performance engine built directly on Node
 
 ## Basic Configuration
 
+Here is how you configure a standard SMTP fallback (like Gmail, SendGrid, or Mailgun) inside your NexoMailer instance.
+
 ```typescript
-{
-  type: 'smtp',
-  config: {
-    host: 'smtp.gmail.com',
-    port: 587,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS
+import { NexoMailer } from '@nexomailer/core';
+
+const mailer = new NexoMailer({
+  providers: [
+    {
+      type: 'smtp',
+      priority: 2, // Used as a fallback
+      config: {
+        host: 'smtp.gmail.com', // Your SMTP host
+        port: 587,              // Port 587 for STARTTLS, 465 for implicit TLS
+        auth: {
+          user: process.env.SMTP_USER, // Your SMTP username/email
+          pass: process.env.SMTP_PASS  // Your SMTP password or App Password
+        }
+      }
     }
-  }
-}
+  ]
+});
 ```
 
 ---
 
 ## Advanced Enterprise Setup
 
-For high-volume production environments, you can fine-tune the low-level socket behavior:
+For high-volume production environments, you can fine-tune the low-level socket behavior to maximize throughput and prevent dropped connections.
 
 ```typescript
 config: {
-  host: '...',
+  host: 'smtp.enterprise.com',
   port: 587,
-  // Performance
+  
+  // PERFORMANCE POOLING
+  // Keeps a pool of connections open so you don't do a TCP handshake for every email
   pool: true,
+  // Maximum number of simultaneous connections to the SMTP server
   maxConnections: 10,
+  
+  // TIMEOUTS
+  // How long to wait for the initial connection to be established
   connectionTimeout: 5000, // 5 seconds
+  // How long to wait for a response during the SMTP conversation (e.g., waiting for '250 OK')
   socketTimeout: 10000,    // 10 seconds
   
-  // Security & TLS
-  secure: false, // Set to true for Port 465
+  // SECURITY & TLS
+  secure: false, // Set to true ONLY if you are using Port 465 (Implicit TLS)
   tls: {
-    rejectUnauthorized: true,
-    servername: 'smtp.yourdomain.com'
+    rejectUnauthorized: true, // Fail if the server's SSL certificate is invalid
+    servername: 'smtp.yourdomain.com' // Specify SNI if the server hosts multiple domains
   },
   
-  // Custom Greeting
-  name: 'my-custom-app' // Used in EHLO command
+  // CUSTOM GREETING
+  // The hostname sent during the EHLO command. Helps with deliverability/reputation.
+  name: 'my-custom-app' 
 }
 ```
 
@@ -61,6 +90,13 @@ config: {
 ### 1. Standard (Username/Password)
 Most common for services like Mailtrap, SendGrid, or Gmail App Passwords.
 
+```typescript
+auth: {
+  user: 'admin@yourcompany.com',
+  pass: 'your_super_secret_password'
+}
+```
+
 ### 2. OAuth2 (XOAUTH2)
 Highly recommended for modern Gmail/Google Workspace integration to avoid "Less Secure App" issues.
 
@@ -68,6 +104,7 @@ Highly recommended for modern Gmail/Google Workspace integration to avoid "Less 
 auth: {
   type: 'oauth2',
   user: 'admin@yourcompany.com',
+  // Your temporary access token generated from Google Cloud Console
   accessToken: 'ya29.A0AR...'
 }
 ```
@@ -80,7 +117,7 @@ auth: {
 If you are behind a firewall or using a slow SMTP relay, increase the `connectionTimeout` and `socketTimeout` values.
 
 ### SSL/TLS Errors
-If you are using a self-signed certificate on a private SMTP server, you can temporarily disable strict TLS validation (only recommended for internal development):
+If you are using a self-signed certificate on a private internal SMTP server, you can temporarily disable strict TLS validation. **(Only recommended for internal development, never for production facing the public internet)**:
 
 ```typescript
 tls: {

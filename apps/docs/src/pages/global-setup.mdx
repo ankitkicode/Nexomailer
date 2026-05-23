@@ -4,66 +4,212 @@ This page provides a complete reference for the `NexoMailer` constructor options
 
 ---
 
+## Installation
+
+To get started with the global setup, you will need the core SDK and any optional modules you plan to use. 
+
+Using **npm** (recommended):
+```bash
+npm install @nexomailer/core @nexomailer/providers @nexomailer/analytics
+```
+
+*(Alternatively, you can use `pnpm add` or `yarn add` with the same package names).*
+
+---
+
+## 1. Environment Variables (.env)
+
+Before writing any code, it is highly recommended to store all your sensitive API keys and connection strings in a `.env` file at the root of your project.
+
+```env
+# Example .env file
+
+# Providers
+RESEND_API_KEY="re_123456789"
+SMTP_USER="your-email@gmail.com"
+SMTP_PASS="your-app-password"
+
+# Analytics (MongoDB)
+MONGODB_URI="mongodb+srv://user:pass@cluster.mongodb.net/nexomailer"
+
+# Queue (Redis)
+REDIS_HOST="127.0.0.1"
+REDIS_PORT="6379"
+
+# AI Personalization
+OPENAI_API_KEY="sk-proj-..."
+```
+
+---
+
+import { Tabs, Tab } from 'nextra/components'
+
+## 2. Best Practice: Create a Reusable Instance
+
+In a modern Node.js application, you **should not** initialize `NexoMailer` every time you want to send an email. 
+
+Instead, create a **single reusable instance** (a Singleton) in a dedicated file, configure it once, and then export it so the rest of your app can use it easily. NexoMailer fully supports both **TypeScript/ES Modules** and standard **CommonJS** (Node.js).
+
+<Tabs items={['TypeScript / ES Modules', 'CommonJS (Node.js)']}>
+  <Tab>
+    ### `src/lib/mailer.ts`
+    ```typescript
+    import { NexoMailer } from '@nexomailer/core';
+
+    // 1. Initialize once
+    export const mailer = new NexoMailer({
+      providers: [
+        { 
+          type: 'resend', 
+          priority: 1, 
+          config: { apiKey: process.env.RESEND_API_KEY } 
+        }
+      ],
+      analytics: { mongodbUri: process.env.MONGODB_URI }
+    });
+
+    // 2. You must call init() before the app starts handling requests
+    export async function initializeMailer() {
+      await mailer.init();
+      console.log('✅ NexoMailer Engine Ready');
+    }
+    ```
+
+    ### Usage anywhere in your app:
+    ```typescript
+    import { mailer } from '@/lib/mailer';
+
+    await mailer.send({
+      to: 'user@example.com',
+      subject: 'Hello World',
+      html: '<h1>Welcome</h1>'
+    });
+    ```
+  </Tab>
+
+  <Tab>
+    ### `src/lib/mailer.js`
+    ```javascript
+    const { NexoMailer } = require('@nexomailer/core');
+
+    // 1. Initialize once
+    const mailer = new NexoMailer({
+      providers: [
+        { 
+          type: 'resend', 
+          priority: 1, 
+          config: { apiKey: process.env.RESEND_API_KEY } 
+        }
+      ],
+      analytics: { mongodbUri: process.env.MONGODB_URI }
+    });
+
+    // 2. You must call init() before the app starts handling requests
+    async function initializeMailer() {
+      await mailer.init();
+      console.log('✅ NexoMailer Engine Ready');
+    }
+
+    module.exports = { mailer, initializeMailer };
+    ```
+
+    ### Usage anywhere in your app:
+    ```javascript
+    const { mailer } = require('../lib/mailer');
+
+    await mailer.send({
+      to: 'user@example.com',
+      subject: 'Hello World',
+      html: '<h1>Welcome</h1>'
+    });
+    ```
+  </Tab>
+</Tabs>
+
+---
+
 ## Complete Configuration Example
 
-Here is a full-featured setup including all optional modules.
+Here is a full-featured setup including all optional modules, with line-by-line explanations.
 
 ```typescript
 import { NexoMailer } from '@nexomailer/core';
 
+// Initialize the core mailer engine
 const mailer = new NexoMailer({
-  // 1. Providers (At least one required)
+  
+  // 1. Providers (Required: At least one provider must be defined)
+  // These are the services that actually send the email.
   providers: [
     { 
-      type: 'resend', 
-      priority: 1, 
-      config: { apiKey: process.env.RESEND_API_KEY } 
+      type: 'resend', // We are using Resend as our primary provider
+      priority: 1,    // Priority 1 means this is tried first
+      config: { 
+        // Pass your API key. NEVER hardcode this, always use environment variables.
+        apiKey: process.env.RESEND_API_KEY 
+      } 
     },
     { 
-      type: 'smtp', 
-      priority: 2, 
+      type: 'smtp',   // We are using a standard SMTP server as a fallback
+      priority: 2,    // Priority 2 means this is only used if Priority 1 fails
       config: { 
-        host: 'smtp.gmail.com', 
-        port: 587, 
-        auth: { user: '...', pass: '...' } 
+        host: 'smtp.gmail.com', // Your SMTP server address
+        port: 587,              // Standard TLS port
+        auth: { 
+          user: process.env.SMTP_USER, // Your SMTP username
+          pass: process.env.SMTP_PASS  // Your SMTP password
+        } 
       } 
     }
   ],
 
-  // 2. Analytics (Persistence)
+  // 2. Analytics (Optional: 100% Private Persistence)
+  // This module saves every email event directly to your own database.
   analytics: {
+    // Your MongoDB connection string. 
     mongodbUri: process.env.MONGODB_URI,
+    // (Optional) Tag all records with a project ID for multi-tenant apps
     projectId: 'my-saas-app',
+    // (Optional) Mark these records as production or development
     environment: 'production',
+    // (Optional) How many days to keep the logs before auto-deleting them
     retentionDays: 90
   },
 
-  // 3. Tracking (Engagement)
+  // 3. Tracking (Optional: Engagement Tracking)
+  // This module tracks if users open your emails or click your links.
   tracking: {
-    enabled: true,
+    enabled: true, // Turn the entire tracking system on or off
+    // The base URL where your tracking server is hosted (see Tracking Module docs)
     baseUrl: 'https://api.myapp.com/api',
-    opens: true,
-    clicks: true
+    opens: true,   // Track when an email is opened (adds a 1x1 tracking pixel)
+    clicks: true   // Track when links inside the email are clicked (rewrites URLs)
   },
 
   // 4. AI Personalization (Optional)
+  // This module uses LLMs to optimize subject lines and personalize content.
   ai: {
-    provider: 'openai',
-    apiKey: process.env.OPENAI_API_KEY,
-    model: 'gpt-4o',
-    temperature: 0.7
+    provider: 'openai', // You can use 'openai' or 'openrouter'
+    apiKey: process.env.OPENAI_API_KEY, // Your LLM API key
+    model: 'gpt-4o',    // The specific model to use
+    temperature: 0.7    // Creativity level of the AI (0.0 to 1.0)
   },
 
   // 5. Queue & Scheduling (Optional)
+  // This module uses BullMQ and Redis to process emails in the background.
   queue: {
-    redis: { host: 'localhost', port: 6379 },
-    concurrency: 5
+    redis: { 
+      host: 'localhost', // Your Redis server host
+      port: 6379         // Your Redis server port
+    },
+    concurrency: 5       // How many emails to process simultaneously
   },
 
-  // 6. Branding & Style
+  // 6. Branding & Style (Optional)
+  // Default values passed to the AI module to ensure tone consistency.
   branding: {
     companyName: 'NexoDev',
-    tone: 'Professional',
+    tone: 'Professional and helpful',
     websiteUrl: 'https://nexodev.com'
   }
 });
@@ -114,7 +260,9 @@ Redis-backed background processing.
 Always initialize the SDK before using it to ensure all plugins and database connections are ready.
 
 ```typescript
+// Connects to MongoDB, Redis, and initializes the provider pool
 await mailer.init();
+
 console.log('NexoMailer is ready to send!');
 ```
 

@@ -2,27 +2,49 @@
 
 For high-volume applications, sending emails synchronously can slow down your app. NexoMailer's Queue module uses **BullMQ + Redis** to handle background processing, automatic retries, and rate limiting.
 
+## Installation
+
+Install the Queue module via npm:
+
+```bash
+npm install @nexomailer/queue
+```
+
+*(Alternatively, you can use `pnpm add @nexomailer/queue` or `yarn add @nexomailer/queue`).*
+
 ---
 
 ## 1. Setup & Configuration
 
-To use the queue, you need a running **Redis** instance.
+To use the queue, you need a running **Redis** instance. Here is a detailed example of how to configure the queue within your main NexoMailer instance.
 
 ```typescript
+import { NexoMailer } from '@nexomailer/core';
+
 const mailer = new NexoMailer({
   /* ... providers ... */
+  
+  // Configure the Queue Module
   queue: {
+    // Redis Connection settings (Required for BullMQ)
     redis: {
-      host: 'localhost',
-      port: 6379
+      host: 'localhost', // Your Redis server IP or hostname
+      port: 6379         // Your Redis server port
     },
-    concurrency: 5, // Process 5 emails at a time
+    
+    // Concurrency controls how many workers process emails at the exact same time
+    // Higher concurrency = faster sending, but more CPU/RAM usage
+    concurrency: 5, 
+    
+    // Optional Rate Limiter to prevent API bans from providers like Resend/SES
     limiter: {
-      max: 10,       // Max 10 emails
-      duration: 1000 // Every 1 second (Rate limiting)
+      max: 10,       // Maximum number of emails to send...
+      duration: 1000 // ...per 1000 milliseconds (1 second)
     }
   }
 });
+
+await mailer.init(); // This will connect to Redis automatically
 ```
 
 ---
@@ -30,25 +52,31 @@ const mailer = new NexoMailer({
 ## 2. Scheduling Emails
 
 ### Immediate Background Send
-Use `queue.schedule()` to offload the sending process to the background worker.
+Use `queue.schedule()` instead of `send()` to offload the sending process to the background worker immediately. This keeps your API responses lightning fast.
 
 ```typescript
+// schedule() returns a jobId immediately while processing the email in the background
 const { jobId } = await mailer.queue.schedule({
   to: 'user@example.com',
   subject: 'Background Task',
-  html: '...'
+  html: '<h1>We are processing your request</h1>'
 });
+
+console.log(`Email added to queue with ID: ${jobId}`);
 ```
 
 ### Future Scheduling
 You can schedule an email to be sent at a specific time in the future.
 
 ```typescript
+// This email will sit in Redis until the exact scheduled time arrives
 await mailer.queue.schedule({
   to: 'client@example.com',
   subject: 'Your Weekly Report',
-  html: '...',
-  scheduledAt: new Date('2026-05-20T10:00:00Z')
+  html: '<p>Here is your data...</p>',
+  
+  // Use the scheduledAt property to define when it should send
+  scheduledAt: new Date('2026-05-20T10:00:00Z') 
 });
 ```
 
@@ -56,15 +84,19 @@ await mailer.queue.schedule({
 
 ## 3. Bulk Operations
 
-If you need to send a large campaign, use `scheduleBatch` for better performance.
+If you need to send a large campaign, use `scheduleBatch` for better performance. It minimizes Redis round-trips.
 
 ```typescript
+// Prepare an array of email configurations
 const emails = [
-  { options: { to: 'user1@email.com', subject: 'Hello' } },
-  { options: { to: 'user2@email.com', subject: 'Hi' } }
+  { options: { to: 'user1@email.com', subject: 'Hello User 1', html: '...' } },
+  { options: { to: 'user2@email.com', subject: 'Hi User 2', html: '...' } }
 ];
 
-await mailer.queue.scheduleBatch(emails);
+// Schedule them all at once
+const batchResults = await mailer.queue.scheduleBatch(emails);
+
+console.log(`Scheduled ${batchResults.length} emails successfully.`);
 ```
 
 ---
@@ -79,6 +111,12 @@ NexoMailer gives you full control over the lifecycle of your background jobs.
 | `mailer.queue.resume()` | Start processing jobs again. |
 | `mailer.queue.getStats()` | Get counts of `waiting`, `failed`, `completed` jobs. |
 | `mailer.queue.cancel(jobId)` | Remove a specific email from the queue before it sends. |
+
+```typescript
+// Example: Checking queue health
+const stats = await mailer.queue.getStats();
+console.log(`Currently waiting: ${stats.waiting}, Completed: ${stats.completed}`);
+```
 
 ---
 

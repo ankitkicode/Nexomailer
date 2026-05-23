@@ -2,6 +2,16 @@
 
 NexoMailer Analytics is a high-performance persistence layer that turns raw tracking events into actionable insights. It stores everything in your own MongoDB, giving you 100% data ownership.
 
+## Installation
+
+Install the Analytics module:
+
+```bash
+npm install @nexomailer/analytics
+```
+
+*(Alternatively, you can use `pnpm add @nexomailer/analytics` or `yarn add @nexomailer/analytics`).*
+
 ---
 
 ## 🏗️ Unified Data Loop
@@ -10,26 +20,69 @@ The Analytics module automatically aggregates events from two sources:
 1. **Engagement Events**: Opens and Clicks captured by your [Tracking Middleware](./tracking).
 2. **Infrastructure Events**: Bounces and Deliveries captured via [Provider Webhooks](./tracking).
 
+### Setting up the MongoDB Connection
+
+To use the Analytics module, simply provide your MongoDB URI during NexoMailer initialization. The connection is handled automatically.
+
+```typescript
+import { NexoMailer } from '@nexomailer/core';
+
+const mailer = new NexoMailer({
+  /* ... providers ... */
+  analytics: {
+    // Your standard MongoDB connection string
+    mongodbUri: 'mongodb://localhost:27017/nexomailer',
+    
+    // (Optional) Tag records to isolate environments
+    environment: 'production',
+    
+    // (Optional) Retain logs for a specific number of days before auto-deleting
+    retentionDays: 90
+  }
+});
+
+// Connects to the database and ensures all Mongoose indexes are built
+await mailer.init();
+```
+
 ---
 
 ## 1. Accessing Your Data
 
-Since NexoMailer is headless, we provide clean APIs to fetch your message history and statistics.
+Since NexoMailer is headless, we provide clean APIs to fetch your message history and statistics. You can use these functions to feed data into your own custom React or Vue dashboards.
 
 ### Fetch Message List
+Retrieve a paginated list of emails sent through the system.
+
 ```typescript
-const { messages, total } = await mailer.analytics.getMessages({
-  page: 1,
-  limit: 20,
-  status: 'BOUNCED' // Filter by any status
+const result = await mailer.analytics.getMessages({
+  page: 1,             // The page number to retrieve
+  limit: 20,           // Number of records per page
+  status: 'BOUNCED'    // (Optional) Filter by status: SENT, DELIVERED, OPENED, CLICKED, BOUNCED
 });
+
+console.log(`Found ${result.total} bounced messages.`);
+console.log(result.messages); 
+// Array of message summaries including recipient, subject, and status
 ```
 
 ### Get Full Message Audit Trail
-See every single interaction a user had with an email.
+See every single interaction a user had with a specific email.
+
 ```typescript
+// Pass the exact message ID (returned when you call mailer.send)
 const details = await mailer.analytics.getMessageDetails('msg_uuid_123');
-// Returns: { subject: '...', status: 'OPENED', events: [{ type: 'email.sent', ... }, { type: 'email.opened', ... }] }
+
+console.log(`Current Status: ${details.status}`); // e.g., "CLICKED"
+
+// The events array contains a chronological list of everything that happened
+details.events.forEach(event => {
+  console.log(`[${event.timestamp}] ${event.type}: ${JSON.stringify(event.metadata)}`);
+});
+// Output:
+// [2026-05-13T10:00:00Z] email.sent: { provider: 'resend' }
+// [2026-05-13T10:05:00Z] email.opened: { ip: '192.168.1.1' }
+// [2026-05-13T10:06:00Z] email.clicked: { url: 'https://nexodev.agency' }
 ```
 
 ---
@@ -40,12 +93,17 @@ Generate high-level summaries for your custom dashboards.
 
 ```typescript
 const summary = await mailer.analytics.getSummary({
+  // Define the date range for your report
   from: new Date('2026-05-01'),
   to: new Date('2026-05-31'),
+  
+  // (Optional) Filter by environment or projectId
   environment: 'production'
 });
 
+console.log(`Total Sent: ${summary.total}`);
 console.log(`Open Rate: ${summary.openRate}%`);
+console.log(`Click Rate: ${summary.clickRate}%`);
 console.log(`Total Bounces: ${summary.bounced}`);
 ```
 
@@ -65,4 +123,4 @@ To maintain a clean state, the Analytics module uses a "Priority Ladder". A mess
 
 ## Build Your Own Dashboard
 
-NexoMailer is designed to be the engine *behind* your dashboard. You can use our provided [Schemas](./data-architecture) to build your own UI using React, Vue, or any other framework. All data is indexed by `messageId`, `projectId`, and `recipient` for sub-millisecond response times.
+NexoMailer is designed to be the engine *behind* your dashboard. You can use our provided [Schemas](./data-architecture) to build your own UI. All data is indexed by `messageId`, `projectId`, and `recipient` for sub-millisecond response times.

@@ -1,78 +1,137 @@
 # Email Tracking & Webhooks
 
-NexoMailer provides a dual-layer tracking system: **Direct Tracking** (for engagement) and **Provider Webhooks** (for infrastructure events).
+NexoMailer provides a dual-layer tracking system: **Direct Tracking** (for engagement) and **Provider Webhooks** (for infrastructure events). Because NexoMailer is headless, *you* host the tracking endpoints, ensuring that no third party intercepts your users' data.
+
+## Installation
+
+Install the Tracking module:
+
+```bash
+npm install @nexomailer/tracking
+```
+
+*(Alternatively, you can use `pnpm add @nexomailer/tracking` or `yarn add @nexomailer/tracking`).*
 
 ---
 
 ## 1. Engagement Tracking (Opens & Clicks)
 
-When you mount the middleware, NexoMailer handles engagement tracking automatically via its internal endpoints.
+When you mount the NexoMailer middleware into your server, it automatically handles engagement tracking.
+
+### Setting up the Server (Express.js Example)
 
 ```typescript
-// Mount this in your main Express/Fastify app
+import express from 'express';
+import { NexoMailer } from '@nexomailer/core';
+
+// 1. Initialize NexoMailer
+const mailer = new NexoMailer({
+  /* ... providers ... */
+  tracking: {
+    enabled: true,
+    // IMPORTANT: This must be the public URL where your server is hosted!
+    baseUrl: 'https://api.yourdomain.com/api',
+    opens: true,
+    clicks: true
+  }
+});
+
+await mailer.init();
+
+// 2. Initialize your Express App
+const app = express();
+
+// 3. Mount the NexoMailer Tracking Middleware
+// This automatically creates routes under the '/api' path.
 app.use('/api', mailer.tracking.middleware());
+
+// Start your server
+app.listen(3000, () => {
+  console.log('Tracking Server is live!');
+});
 ```
 
-**Endpoints provided**:
-- `GET /api/track/open/:messageId`: Tracks email opens via a 1x1 pixel.
-- `GET /api/track/click/:messageId?url=...`: Tracks link clicks and redirects the user.
+**Endpoints automatically provided by the middleware**:
+- `GET /api/track/open/:messageId`: Tracks email opens via a 1x1 invisible pixel injected into your HTML.
+- `GET /api/track/click/:messageId?url=...`: Intercepts link clicks, logs them to your database, and then redirects the user to their destination.
 
 ---
 
 ## 2. Infrastructure Webhooks (Bounces & Deliveries)
 
-To track events that happen outside of the email body (like a hard bounce or a spam complaint), you must configure Webhooks in your provider's dashboard.
+To track events that happen outside of the email body (like a hard bounce, deferral, or a spam complaint), you must configure Webhooks in your provider's dashboard.
 
 ### Built-in Support: Resend
+If you use Resend as a provider, NexoMailer can parse its webhooks natively.
 Configure your Resend dashboard to send events to:
-`https://your-api.com/api/track/webhook/resend`
+`https://api.yourdomain.com/api/track/webhook/resend`
 
 ### Custom Webhook Parsers
-If you use a provider not natively supported, you can register a custom parser:
+If you use a provider not natively supported (e.g., Postmark), you can register a custom parser:
 
 ```typescript
+// Register a custom parser logic
 mailer.tracking.registerParser('postmark', (payload) => {
-  // Map Postmark payload to NexoMailer format
+  // Map the specific Postmark payload into the standard NexoMailer format
   return {
     messageId: payload.Metadata.nexo_id,
+    
+    // Normalize the event type
     eventType: payload.RecordType === 'Bounce' ? 'email.bounced' : 'email.delivered',
+    
+    // Store the raw original data just in case
     metadata: { original: payload }
   };
 });
 ```
 
-Now, point Postmark to: `https://your-api.com/api/track/webhook/postmark`.
+Now, point Postmark to: `https://api.yourdomain.com/api/track/webhook/postmark`.
 
 ---
 
 ## 3. Outgoing Webhooks (Notifications)
 
-Instruct NexoMailer to notify **your other services** whenever an event occurs.
+Instruct NexoMailer to notify **your other internal services** whenever an event occurs. This is useful if you want your CRM to update when a user clicks a link.
 
 ```typescript
-tracking: {
-  enabled: true,
-  webhooks: [
-    {
-      url: 'https://your-crm.com/webhooks/nexomailer',
-      secret: 'your_webhook_secret',
-      events: ['email.opened', 'email.clicked', 'email.bounced']
-    }
-  ]
-}
+const mailer = new NexoMailer({
+  /* ... */
+  tracking: {
+    enabled: true,
+    webhooks: [
+      {
+        // The URL of your external service/CRM
+        url: 'https://crm.yourdomain.com/webhooks/nexomailer',
+        
+        // A secret key used to sign the webhook payload for security
+        secret: 'your_webhook_secret',
+        
+        // Only trigger this webhook for these specific events
+        events: ['email.opened', 'email.clicked', 'email.bounced']
+      }
+    ]
+  }
+});
 ```
 
 > [!IMPORTANT]
-> **Signature Verification**: NexoMailer signs every outgoing webhook with an `X-NexoMailer-Signature`. Use our [Webhook SDK](./analytics) to verify these payloads in your backend.
+> **Signature Verification**: NexoMailer signs every outgoing webhook with an `X-NexoMailer-Signature`. Use our SDK to verify these payloads in your receiving backend to prevent spoofing.
 
 ---
 
 ## 🔍 Real-time Event Monitoring
 
-You can subscribe to events programmatically in your code:
+You can also subscribe to events programmatically directly within your Node.js code via standard EventEmitters:
 
 ```typescript
+// Listen for an open event
 mailer.on('email.opened', (event) => {
-  console.log(`User ${event.recipient} opened the email!`);
+  console.log(`User ${event.recipient} opened message ${event.messageId}!`);
+  // You can trigger custom logic here, like updating a user's lead score
+});
+
+// Listen for a bounce event
+mailer.on('email.bounced', (event) => {
+  console.warn(`Message ${event.messageId} bounced. Suspending user ${event.recipient}`);
 });
 ```

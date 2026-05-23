@@ -1,8 +1,6 @@
-
-
 # NexoMailer SDK
 
- **AI-powered email infrastructure SDK**
+**AI-powered email infrastructure SDK**
 
 NexoMailer is a professional Node.js framework for developers who need more than just a simple mailer. It combines multi-provider failover, AI-driven personalization, and private analytics into a single, cohesive SDK.
 
@@ -11,24 +9,35 @@ NexoMailer is a professional Node.js framework for developers who need more than
 ## ⚡ Quick Start
 
 ### 1. Installation
+Install the core framework and essential plugins via npm:
 ```bash
-pnpm add @nexomailer/core @nexomailer/providers @nexomailer/analytics
+npm install @nexomailer/core @nexomailer/providers @nexomailer/analytics
 ```
+*(You can also use `pnpm add` or `yarn add`)*
 
 ### 2. Basic Configuration
 ```typescript
 import { NexoMailer } from '@nexomailer/core';
 
+// Initialize the mailer with your basic setup
 const mailer = new NexoMailer({
+  // Define at least one provider (SMTP, Resend, etc.)
   providers: [{
     type: 'smtp',
     priority: 1,
-    config: { host: 'smtp.gmail.com', port: 587, auth: { ... } }
+    config: { 
+      host: 'smtp.gmail.com', 
+      port: 587, 
+      auth: { user: '...', pass: '...' } 
+    }
   }],
+  // Connect to your MongoDB for private analytics
   analytics: {
     mongodbUri: process.env.MONGODB_URI
   }
 });
+
+await mailer.init();
 ```
 
 ---
@@ -44,6 +53,8 @@ To keep the SDK lightweight, NexoMailer is split into specialized packages. You 
 | **`@nexomailer/analytics`** | The Memory | Handles MongoDB persistence and reporting. |
 | **`@nexomailer/ai`** | The Intelligence | Direct integration with LLMs for personalization. |
 | **`@nexomailer/templates`** | The Designer | Responsive MJML engine with Handlebars support. |
+| **`@nexomailer/queue`** | The Scheduler | BullMQ/Redis setup for background email processing. |
+| **`@nexomailer/tracking`** | The Tracker | Pixel and link tracking middleware. |
 
 ---
 
@@ -52,9 +63,9 @@ To keep the SDK lightweight, NexoMailer is split into specialized packages. You 
 When you call `mailer.send()`, NexoMailer does something unique:
 1. It generates a **Unique UUID** (The Nexo ID) *before* sending.
 2. It uses this ID for all tracking pixels and link rewrites.
-3. It returns this ID to you.
+3. It returns this ID to you immediately.
 
-**Result**: Even if you use 3 different providers for one campaign, you can track everything via a **single, consistent ID** in your database.
+**Result**: Even if you use 3 different providers for one campaign (because of failover), you can track everything via a **single, consistent ID** in your database.
 
 ---
 
@@ -67,7 +78,7 @@ When you call `mailer.send()`, NexoMailer does something unique:
 
 ## Ready to Dive In?
 
-- [Setup SMTP Providers](./smtp)
+- [Global Configuration](./global-setup)
 - [Configure Multi-Provider Failover](./providers)
 - [Implement Live Tracking](./tracking)
-- [Understand Data Architecture](./data-architecture)
+- [Add AI Personalization](./ai)

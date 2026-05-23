@@ -2,6 +2,20 @@
 
 NexoMailer is designed to be indestructible. By supporting multiple providers simultaneously, it ensures that your emails are delivered even if one service goes down.
 
+## Installation
+
+Install the providers module via npm. This package contains the official wrappers for Resend, SES, and the abstract classes needed to build your own.
+
+```bash
+npm install @nexomailer/providers
+```
+
+*(Alternatively, you can use `pnpm add @nexomailer/providers` or `yarn add @nexomailer/providers`).*
+
+> **Note**: If you are only using native SMTP, you can use `@nexomailer/smtp` instead. See the [SMTP Documentation](./smtp).
+
+---
+
 ## Supported Providers
 
 | Type | Package | Key Config Fields |
@@ -12,60 +26,115 @@ NexoMailer is designed to be indestructible. By supporting multiple providers si
 
 ---
 
-## 1. Sequential Failover
+## 1. Sequential Failover (Recommended)
 
-The `sequential` strategy (default) tries providers one by one based on their `priority` (1 is highest).
+The `sequential` strategy (default) tries providers one by one based on their `priority` (1 is highest). This is perfect for setting up a cheap/primary provider with a reliable/expensive fallback.
 
 ```typescript
+import { NexoMailer } from '@nexomailer/core';
+
 const mailer = new NexoMailer({
+  // Tell the engine to use Priority-based failover
+  failover: { strategy: 'sequential', maxRetries: 3 },
+  
   providers: [
-    { type: 'resend', priority: 1, config: { apiKey: '...' } },
-    { type: 'smtp', priority: 2, config: { host: '...' } }
+    // PRIMARY: NexoMailer will ALWAYS try Resend first
+    { 
+      type: 'resend', 
+      priority: 1, 
+      config: { apiKey: process.env.RESEND_API_KEY } 
+    },
+    
+    // FALLBACK: If Resend API is down or returns a 5xx error, 
+    // NexoMailer instantly switches to SMTP without throwing an error to your users
+    { 
+      type: 'smtp', 
+      priority: 2, 
+      config: { 
+        host: 'smtp.gmail.com',
+        port: 587,
+        auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+      } 
+    }
   ]
 });
 ```
-
-**How it works**: NexoMailer will try Resend first. If it returns a 4xx/5xx error or a timeout, the failover engine will immediately catch the error and retry using the SMTP provider.
 
 ---
 
 ## 2. Weighted Load Balancing
 
-If you have high volume, you can split traffic across providers to avoid rate limits.
+If you have high volume, you can split traffic across providers to avoid hitting rate limits.
 
 ```typescript
-failover: { strategy: 'weighted' },
-providers: [
-  { type: 'ses', weight: 70, config: { ... } }, // 70% traffic
-  { type: 'resend', weight: 30, config: { ... } } // 30% traffic
-]
+const mailer = new NexoMailer({
+  // Tell the engine to split traffic instead of prioritizing
+  failover: { strategy: 'weighted' },
+  
+  providers: [
+    // 70% of all emails sent will be routed through AWS SES
+    { 
+      type: 'ses', 
+      weight: 70, 
+      config: { 
+        region: 'us-east-1',
+        accessKeyId: process.env.AWS_KEY,
+        secretAccessKey: process.env.AWS_SECRET
+      } 
+    },
+    
+    // The remaining 30% will go through Resend
+    { 
+      type: 'resend', 
+      weight: 30, 
+      config: { apiKey: process.env.RESEND_API_KEY } 
+    }
+  ]
+});
 ```
 
 ---
 
 ## 3. Registering Custom Providers
 
-You can extend NexoMailer by adding your own provider engine.
+You can extend NexoMailer by adding your own provider engine (e.g., Postmark, SendGrid).
 
-### Create the Provider Class
+### Step 1: Create the Provider Class
 ```typescript
 import { EmailProvider } from '@nexomailer/providers';
 
+// 1. Extend the base class
 class PostmarkProvider extends EmailProvider {
+  // 2. Implement the required 'send' method
   async send(options) {
-    // Call Postmark API here
-    return { id: 'pm_123', status: 'sent' };
+    // 3. Translate NexoMailer options to Postmark API format
+    const payload = {
+      From: options.from,
+      To: options.to,
+      Subject: options.subject,
+      HtmlBody: options.html
+    };
+    
+    // Call Postmark API (pseudo-code)
+    const result = await postmarkClient.sendEmail(payload);
+    
+    // 4. Return the standard NexoMailer response format
+    return { 
+      id: result.MessageID, 
+      status: 'sent' 
+    };
   }
 }
 ```
 
-### Register it with NexoMailer
+### Step 2: Register it with NexoMailer
 ```typescript
 import { defaultRegistry } from '@nexomailer/providers';
 
-// Add it to the global registry before initializing NexoMailer
+// 1. Add it to the global registry BEFORE initializing NexoMailer
 defaultRegistry.register('postmark', PostmarkProvider);
 
+// 2. Now you can use 'postmark' as a valid type!
 const mailer = new NexoMailer({
   providers: [{ type: 'postmark', config: { apiKey: '...' } }]
 });
@@ -79,8 +148,9 @@ NexoMailer keeps track of provider health. If a provider consistently fails, it 
 
 > [!TIP]
 > **Check Provider Status**:
-> You can inspect the health of your infrastructure at runtime:
+> You can inspect the health of your infrastructure at runtime to build custom admin dashboards:
 > ```typescript
 > const health = await mailer.getHealth();
-> console.log(health.providers); // [{ type: 'ses', status: 'active' }, ...]
+> console.log(health.providers); 
+> // Example Output: [{ type: 'resend', status: 'active' }, { type: 'smtp', status: 'cooldown' }]
 > ```
