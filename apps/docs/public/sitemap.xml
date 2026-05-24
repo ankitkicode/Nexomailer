@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://nexomailer-docs.vercel.app/</loc>
+  </url>
+  <url>
+    <loc>https://nexomailer-docs.vercel.app/architecture</loc>
+  </url>
+  <url>
+    <loc>https://nexomailer-docs.vercel.app/global-setup</loc>
+  </url>
+  <url>
+    <loc>https://nexomailer-docs.vercel.app/smtp</loc>
+  </url>
+  <url>
+    <loc>https://nexomailer-docs.vercel.app/providers</loc>
+  </url>
+  <url>
+    <loc>https://nexomailer-docs.vercel.app/tracking</loc>
+  </url>
+  <url>
+    <loc>https://nexomailer-docs.vercel.app/analytics</loc>
+  </url>
+  <url>
+    <loc>https://nexomailer-docs.vercel.app/templates</loc>
+  </url>
+  <url>
+    <loc>https://nexomailer-docs.vercel.app/ai</loc>
+  </url>
+  <url>
+    <loc>https://nexomailer-docs.vercel.app/queue</loc>
+  </url>
+  <url>
+    <loc>https://nexomailer-docs.vercel.app/data-architecture</loc>
+  </url>
+</urlset>
